@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: ProfessorAgent",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/ProfessorAgent.py",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env"
+    },
+     {
+      "name": "Python: ministral-3b-agent",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/ministral-3b-agent.py",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
