@@ -3,3 +3,5 @@ uvicorn
 python-dotenv
 azure-ai-inference
 jinja2
+requests
+httpx
