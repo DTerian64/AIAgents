@@ -12,13 +12,28 @@ import requests
 
 from Agent.ministral_agent import get_agent_response
 
+import time
+
+
+
 TENANT_ID = "4d5f34d3-d97b-40c7-8704-edff856d3654"
 CLIENT_ID = "177da031-26fa-448a-8521-1d9bedde86d3"
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 JWKS_URL = f"{AUTHORITY}/discovery/v2.0/keys"
 
-r = requests.get(JWKS_URL)
-jwks = r.json()
+
+_jwks_cache = None
+_jwks_last_fetch = 0
+
+def get_jwks():
+    global _jwks_cache, _jwks_last_fetch
+    # Refresh every 24h
+    if not _jwks_cache or time.time() - _jwks_last_fetch > 86400:
+        r = requests.get(JWKS_URL)
+        r.raise_for_status()
+        _jwks_cache = r.json()
+        _jwks_last_fetch = time.time()
+    return _jwks_cache
 
 
 def verify_token(request: Request):
@@ -33,6 +48,7 @@ def verify_token(request: Request):
     try:
         # Validate signature
         header = jwt.get_unverified_header(token)
+        jwks = get_jwks()  # <-- lazy loaded + cached!
         key = next(k for k in jwks["keys"] if k["kid"] == header["kid"])
         payload = jwt.decode(
             token,

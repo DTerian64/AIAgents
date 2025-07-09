@@ -4,13 +4,20 @@
 <head>
   <title>David AI Agent</title>
 </head>
-<body>
+<div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1em;">
+  <span id="userWelcome">Please sign in to ask a question.</span>
+  <div>
+    <button id="signInButton" onclick="signIn()">Sign In</button>
+    <button id="signOutButton" onclick="signOut()" style="display:none;">Sign Out</button>
+  </div>
+</div>
   <h1>Ask the Agent</h1>
   <textarea id="question" rows="4" cols="50"></textarea><br>
-  <button onclick="sendQuestion()" id="submitButton">Submit</button>
+  <button onclick="sendQuestion()" id="submitButton" disabled="true">Submit</button>
   <h3>Answer:</h3>
   <textarea id="answer" rows="20" style="width: 95%; resize: vertical;" readonly></textarea>
 
+  <script src="https://alcdn.msauth.net/browser/2.34.0/js/msal-browser.min.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>
