@@ -2,6 +2,7 @@
 #pip install fastapi uvicorn jinja2
 #pip install azure-ai-inference
 #pip install python-jose
+#pip install azure-cosmos
 import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -10,17 +11,28 @@ from fastapi.templating import Jinja2Templates
 from fastapi import Depends, HTTPException, status, Request
 from jose import jwt
 import requests
-
 from Agent.ministral_agent import get_agent_response
-
+from datetime import datetime
 import time
+from uuid import uuid4 
+from azure.cosmos import CosmosClient, PartitionKey
 
-
-
-TENANT_ID = "4d5f34d3-d97b-40c7-8704-edff856d3654"
-CLIENT_ID = "177da031-26fa-448a-8521-1d9bedde86d3"
+TENANT_ID = os.getenv("TENANT_ID") 
+CLIENT_ID = os.getenv("CLIENT_ID") 
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 JWKS_URL = f"{AUTHORITY}/discovery/v2.0/keys"
+
+COSMOS_ENDPOINT = os.getenv("COSMOS_ENDPOINT") 
+COSMOS_KEY = os.getenv("COSMOS_PRIMARY_KEY")
+DATABASE_NAME = os.getenv("DATABASE_NAME") 
+CONTAINER_NAME = os.getenv("CONTAINER_NAME")
+
+cosmos_client = CosmosClient(COSMOS_ENDPOINT, credential=COSMOS_KEY)
+database = cosmos_client.create_database_if_not_exists(DATABASE_NAME)
+container = database.create_container_if_not_exists(
+    id=CONTAINER_NAME,
+    partition_key=PartitionKey(path="/userid")
+)
 
 
 _jwks_cache = None
@@ -76,6 +88,26 @@ async def chat(request: Request, token_data=Depends(verify_token)):
     data = await request.json()
     question = data.get("question", "")
     answer = get_agent_response(question)
+
+     # Extract user id from token claims (e.g., `oid` claim for Entra ID)
+    userid = token_data.get("oid")  # or use `sub` or `upn` based on your claims
+    username = token_data.get("upn") or token_data.get("name")  # UPN is usually the user’s email
+
+
+    # Create the conversation document
+    conversation = {
+        "id": str(uuid4()),
+        "userid": userid,
+        "username": username,
+        "question": question,
+        "answer": answer,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+    # Save to Cosmos DB
+    container.create_item(body=conversation)
+
+
     return JSONResponse({"answer": answer})
 
 # Health check endpoint for Azure
@@ -92,8 +124,3 @@ async def catch_all(request: Request, path: str):
     
     # Return index.html for all other routes (SPA routing)
     return templates.TemplateResponse("index.html", {"request": request})
-
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
