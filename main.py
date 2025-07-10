@@ -2,6 +2,7 @@
 #pip install fastapi uvicorn jinja2
 #pip install azure-ai-inference
 #pip install python-jose
+import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -76,3 +77,23 @@ async def chat(request: Request, token_data=Depends(verify_token)):
     question = data.get("question", "")
     answer = get_agent_response(question)
     return JSONResponse({"answer": answer})
+
+# Health check endpoint for Azure
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+# Catch-all route for SPA - this should be LAST
+@app.get("/{path:path}")
+async def catch_all(request: Request, path: str):
+    # Don't intercept API routes
+    if path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    # Return index.html for all other routes (SPA routing)
+    return templates.TemplateResponse("index.html", {"request": request})
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
