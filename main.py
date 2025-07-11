@@ -17,22 +17,15 @@ import time
 from uuid import uuid4 
 from azure.cosmos import CosmosClient, PartitionKey
 
+import Helpers.MyCosmosDBHelper as MyCosmosDBHelper
+
 TENANT_ID = os.getenv("TENANT_ID") 
 CLIENT_ID = os.getenv("CLIENT_ID") 
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 JWKS_URL = f"{AUTHORITY}/discovery/v2.0/keys"
 
-COSMOS_ENDPOINT = os.getenv("COSMOS_ENDPOINT") 
-COSMOS_KEY = os.getenv("COSMOS_PRIMARY_KEY")
-DATABASE_NAME = os.getenv("DATABASE_NAME") 
-CONTAINER_NAME = os.getenv("CONTAINER_NAME")
 
-cosmos_client = CosmosClient(COSMOS_ENDPOINT, credential=COSMOS_KEY)
-database = cosmos_client.create_database_if_not_exists(DATABASE_NAME)
-container = database.create_container_if_not_exists(
-    id=CONTAINER_NAME,
-    partition_key=PartitionKey(path="/userid")
-)
+ai_conversations_container = MyCosmosDBHelper.getAIConversationsContainer()
 
 
 _jwks_cache = None
@@ -105,7 +98,7 @@ async def chat(request: Request, token_data=Depends(verify_token)):
     }
 
     # Save to Cosmos DB
-    container.create_item(body=conversation)
+    ai_conversations_container.create_item(body=conversation)
 
 
     return JSONResponse({"answer": answer})
@@ -124,3 +117,8 @@ async def catch_all(request: Request, path: str):
     
     # Return index.html for all other routes (SPA routing)
     return templates.TemplateResponse("index.html", {"request": request})
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
