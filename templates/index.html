@@ -19,5 +19,21 @@
 
   <script src="https://alcdn.msauth.net/browser/2.34.0/js/msal-browser.min.js"></script>
   <script src="/static/app.js"></script>
+  <script>
+  const questionBox = document.getElementById("question");
+  const submitButton = document.getElementById("submitButton");
+
+  questionBox.addEventListener("keydown", function(event) {
+    // Check if Enter key was pressed (keyCode 13 or event.key === 'Enter')
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault(); // Stop newline
+      
+      const text = questionBox.value.trim();
+      if (text.length > 0 && !submitButton.disabled) {
+        sendQuestion();
+      }
+    }
+  });
+</script>
 </body>
 </html>

@@ -23,10 +23,18 @@ def get_agent_response(user_input: str) -> str:
     separator = ":"
     if separator in user_input:
         # Split by ||
-        parts = user_input.split(separator, 1)
+        parts = user_input.split(separator, -1)
+        if len(parts) < 2:
+            return "Invalid input format. Please use 'query_type: keyword: query'."
+
         query_type = parts[0].strip().lower()
         keyword = parts[1].strip()
-    
+
+        if len(parts) > 2:
+            query = parts[2].strip()
+        else:
+            query = None
+            
         if query_type == "product":
             
             results = MyCosmosDBHelper.search_products_detailed(keyword)             
@@ -54,13 +62,21 @@ def get_agent_response(user_input: str) -> str:
     else:
         context = ""
 
-    print(f"Context: {context}")
+    if not context:
+         messages=[
+            SystemMessage(content="You are a helpful assistant"),
+            UserMessage(content=user_input)
+        ]
+    else:
+        messages=[
+            SystemMessage(content=f" Use this data:\n{context}"),
+            UserMessage(content=query or "Show the data.")
+        ]
+
+
     # Create a conversation item
     response = client.complete(
-        messages=[
-            SystemMessage(content=f"You are a helpful assistant. {context}"),
-            UserMessage(content=user_input),
-        ],
+        messages=messages,
         max_tokens=2048,
         temperature=0.8,
         top_p=0.1,
