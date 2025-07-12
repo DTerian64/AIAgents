@@ -22,12 +22,12 @@ jobs:
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
 
       - name: Create virtual environment and install dependencies
         run: |
-          python -m venv venv
-          source venv/bin/activate
+          python -m venv .venv
+          source .venv/bin/activate
           pip install -r requirements.txt
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
@@ -56,6 +56,11 @@ jobs:
         with:
           name: python-app
           path: .
+
+      - name: List downloaded files (debug)
+        run: |
+          ls -la
+          find . -name "*.py" -type f
 
       - name: Login to Azure
         uses: azure/login@v2
