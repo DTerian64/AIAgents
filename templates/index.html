@@ -12,13 +12,17 @@
   </div>
 </div>
   <h1>Ask the Agent</h1>
+   <div style="margin-top: 1em;">
+    <label><input type="radio" name="knowledgeSource" value="general"> Use General Knowledge</label>
+    <label><input type="radio" name="knowledgeSource" value="cosmic" checked> Use Cosmic Works</label>
+  </div>
   <textarea id="question" rows="4" cols="50"></textarea><br>
   <button onclick="sendQuestion()" id="submitButton" disabled="true">Submit</button>
   <h3>Answer:</h3>
   <textarea id="answer" rows="20" style="width: 95%; resize: vertical;" readonly></textarea>
 
   <script src="https://alcdn.msauth.net/browser/2.34.0/js/msal-browser.min.js"></script>
-  <script src="/static/app.js"></script>
+  <script src="/static/app.js?v=1.02"></script>
   <script>
   const questionBox = document.getElementById("question");
   const submitButton = document.getElementById("submitButton");
@@ -29,7 +33,7 @@
       event.preventDefault(); // Stop newline
       
       const text = questionBox.value.trim();
-      if (text.length > 0 && !submitButton.disabled) {
+      if (text.length > 0 && !submitButton.disabled) {        
         sendQuestion();
       }
     }

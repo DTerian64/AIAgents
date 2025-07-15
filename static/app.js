@@ -74,12 +74,13 @@ async function sendQuestion() {
     return;
   }
 
-  const button = document.getElementById("submitButton");
-  button.disabled = true;
-  button.innerText = "Please wait...";
+  const submitButton = document.getElementById("submitButton");
+  submitButton.disabled = true;
+  submitButton.innerText = "Please wait...";
 
-  const question = document.getElementById("question").value;
+  const selectedSource = document.querySelector('input[name="knowledgeSource"]:checked').value;
 
+  const question = document.getElementById("question").value.trim();
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
@@ -87,7 +88,9 @@ async function sendQuestion() {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${idToken}`
       },
-      body: JSON.stringify({question})
+      body: JSON.stringify({question,
+        knowledgeSource: selectedSource 
+      })
     });
 
     if (!response.ok) {
@@ -100,7 +103,7 @@ async function sendQuestion() {
     console.error("Error sending question:", error);
     alert("Something went wrong. Please try again.");
   } finally {
-    button.disabled = false;
-    button.innerText = "Submit";
+    submitButton.disabled = false;
+    submitButton.innerText = "Submit";
   }
 }

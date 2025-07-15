@@ -74,13 +74,17 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "version": "1.04"})
 
 @app.post("/api/chat")
 async def chat(request: Request, token_data=Depends(verify_token)):
     data = await request.json()
     question = data.get("question", "")
-    answer = get_agent_response(question)
+    knowledge_source = data.get("knowledgeSource", "general").lower()
+
+    answer = get_agent_response(question, knowledge_source)
 
      # Extract user id from token claims (e.g., `oid` claim for Entra ID)
     userid = token_data.get("oid")  # or use `sub` or `upn` based on your claims
