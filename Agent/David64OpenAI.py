@@ -3,13 +3,13 @@ import os
 from fastapi import FastAPI, Request, HTTPException, status, Depends
 
 from openai import AzureOpenAI
-from langchain_openai import AzureChatOpenAI
+from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 
 import Helpers.MyCosmosDBHelper as MyCosmosDBHelper
 from Helpers.Cosmicworks_ai_tool import CosmicworksAITool
 
-import Agent.CosmicWorksRagChain_ChatGPT as CosmicWorksRAGChain_ChatGPT
+import Agent.CosmicWorksLangChain as CosmicWorksLangChain
 
 class David64OpenAI:
     """A class to handle OpenAI API interactions."""
@@ -26,6 +26,13 @@ class David64OpenAI:
             openai_api_version="2023-05-15",
             temperature=0.7
         )
+        self.embeddings = AzureOpenAIEmbeddings(
+            openai_api_key=os.getenv("AZURE_OPENAI_KEY"),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),  # e.g. https://your-resource-name.openai.azure.com
+            deployment=os.getenv("AZURE_EMBEDDING_DEPLOYMENT"),  # Your deployed embedding model name
+            openai_api_version="2023-05-15",
+            chunk_size=1 
+        )
 
     def _check_env(self):
         for var in ["AZURE_OPENAI_KEY", "AZURE_OPENAI_ENDPOINT", "AZURE_CHAT_DEPLOYMENT", "AZURE_EMBEDDING_DEPLOYMENT"]:
@@ -35,16 +42,19 @@ class David64OpenAI:
 
     def get_agent_response(self, user_input: str, knowledgeSource: str) -> str:
         "route AI call to General or Cosmic Works"    
-        if knowledgeSource == "cosmic": 
+        if knowledgeSource == "cosmic_lang": 
             """Call the Cosmic Works RAG chain with user input."""
             try:        
-                cosmic_rag = CosmicWorksRAGChain_ChatGPT.CosmicWorksRAGChain_ChatGPT(self.chat_model)
-                cosmic_rag.create_local_faiss_index(file_path=r"C:\Users\David\source\repos\AIFoundry\Agents\App_data\sample_products.json")
-                return cosmic_rag.get_process_langchain(user_input)
+                cosmic_lang = CosmicWorksLangChain.CosmicWorksLangChain(self.chat_model, self.embeddings)
+                cosmic_lang.create_local_faiss_index(file_path=r"C:\Users\David\source\repos\AIFoundry\Agents\App_data\sample_products.json")
+                return cosmic_lang.get_process_langchain(user_input)
                                              
             except Exception as e:
                 print(f"Error in get_agent_response: {e}")
-            
+
+        elif knowledgeSource == "cosmic_rag":
+            raise NotImplementedError(f"{knowledgeSource} is not implemented yet.")
+
         else:
             """Call the General MML model with user input."""
             return self.get_process_general_mml(user_input) 

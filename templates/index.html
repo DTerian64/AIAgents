@@ -13,8 +13,9 @@
 </div>
   <h1>Ask the Agent</h1>
    <div style="margin-top: 1em;">
-    <label><input type="radio" name="knowledgeSource" value="general"> Use General Knowledge</label>
-    <label><input type="radio" name="knowledgeSource" value="cosmic" checked> Use Cosmic Works</label>
+    <label><input type="radio" name="knowledgeSource" value="general"> General Knowledge</label>
+    <label><input type="radio" name="knowledgeSource" value="cosmic_lang" checked> Cosmic Works - LangChain</label>
+    <label><input type="radio" name="knowledgeSource" value="cosmic_rag" > Cosmic Works - RAG</label>
   </div>
   <textarea id="question" rows="4" cols="50"></textarea><br>
   <button onclick="sendQuestion()" id="submitButton" disabled="true">Submit</button>

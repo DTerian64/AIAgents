@@ -7,23 +7,22 @@ import os
 import json
 
 
-
-
-class CosmicWorksRAGChain_ChatGPT:
-    def __init__(self, chat_model: AzureChatOpenAI = None):
-        self.embeddings = AzureOpenAIEmbeddings(
-            openai_api_key=os.getenv("AZURE_OPENAI_KEY"),
-            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),  # e.g. https://your-resource-name.openai.azure.com
-            deployment=os.getenv("AZURE_EMBEDDING_DEPLOYMENT"),  # Your deployed embedding model name
-            openai_api_version="2023-05-15",
-            chunk_size=1 
-        )
+class CosmicWorksLangChain:
+    def __init__(self, chat_model: AzureChatOpenAI = None, embeddings: AzureOpenAIEmbeddings = None):
+        
         self.chat_model = chat_model or AzureChatOpenAI(
             openai_api_key=os.getenv("AZURE_OPENAI_KEY"),
             azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),  # e.g. https://your-resource-name.openai.azure.com
             deployment_name=os.getenv("AZURE_CHAT_DEPLOYMENT"),  # Your deployed chat model name
             openai_api_version="2023-05-15",
             temperature=0.7
+        )
+        self.embeddings = embeddings or AzureOpenAIEmbeddings(
+            openai_api_key=os.getenv("AZURE_OPENAI_KEY"),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),  # e.g. https://your-resource-name.openai.azure.com
+            deployment=os.getenv("AZURE_EMBEDDING_DEPLOYMENT"),  # Your deployed embedding model name
+            openai_api_version="2023-05-15",
+            chunk_size=1 
         )
     
     def create_local_faiss_index(self, file_path: str):
@@ -69,7 +68,7 @@ class CosmicWorksRAGChain_ChatGPT:
             qa_chain = self.get_langchain_retrievalqa_agent()
         
             response = qa_chain.invoke(query)
-            return response  
+            return response["result"]  
         except Exception as e:
             print(f"Error in get_process_langchain: {e}")
             return f"Error in get_process_langchain: {e}"

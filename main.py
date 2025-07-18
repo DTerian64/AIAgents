@@ -17,6 +17,7 @@ from uuid import uuid4
 from azure.cosmos import CosmosClient, PartitionKey
 
 import Helpers.MyCosmosDBHelper as MyCosmosDBHelper
+
 from Agent.David64OpenAI import David64OpenAI
 
 TENANT_ID = os.getenv("TENANT_ID") 
@@ -26,7 +27,6 @@ JWKS_URL = f"{AUTHORITY}/discovery/v2.0/keys"
 
 
 ai_conversations_container = MyCosmosDBHelper.getAIConversationsContainer()
-
 
 _jwks_cache = None
 _jwks_last_fetch = 0
@@ -69,6 +69,11 @@ def verify_token(request: Request):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def startup_event():
+    app.state.aiagent = David64OpenAI()
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -79,12 +84,15 @@ async def home(request: Request):
         "version": "1.04"})
 
 @app.post("/api/chat")
-async def chat(request: Request, token_data=Depends(verify_token)):
+async def chat(request: Request, 
+               token_data=Depends(verify_token)              
+    ):
+
     data = await request.json()
     question = data.get("question", "")
     knowledge_source = data.get("knowledgeSource", "general").lower()
-
-    aiagent = David64OpenAI()
+    
+    aiagent = request.app.state.aiagent
     answer = aiagent.get_agent_response(question, knowledge_source)
 
      # Extract user id from token claims (e.g., `oid` claim for Entra ID)
