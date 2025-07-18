@@ -82,6 +82,7 @@ async function sendQuestion() {
 
   const question = document.getElementById("question").value.trim();
   try {
+    
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: {

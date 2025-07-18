@@ -11,13 +11,13 @@ from fastapi.templating import Jinja2Templates
 from fastapi import Depends, HTTPException, status, Request
 from jose import jwt
 import requests
-from Agent.ministral_agent import get_agent_response
 from datetime import datetime
 import time
 from uuid import uuid4 
 from azure.cosmos import CosmosClient, PartitionKey
 
 import Helpers.MyCosmosDBHelper as MyCosmosDBHelper
+from Agent.David64OpenAI import David64OpenAI
 
 TENANT_ID = os.getenv("TENANT_ID") 
 CLIENT_ID = os.getenv("CLIENT_ID") 
@@ -84,7 +84,8 @@ async def chat(request: Request, token_data=Depends(verify_token)):
     question = data.get("question", "")
     knowledge_source = data.get("knowledgeSource", "general").lower()
 
-    answer = get_agent_response(question, knowledge_source)
+    aiagent = David64OpenAI()
+    answer = aiagent.get_agent_response(question, knowledge_source)
 
      # Extract user id from token claims (e.g., `oid` claim for Entra ID)
     userid = token_data.get("oid")  # or use `sub` or `upn` based on your claims
@@ -125,4 +126,4 @@ async def catch_all(request: Request, path: str):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="localhost", port=port)
+    uvicorn.run("main:app", host="localhost", port=port, reload=False)
