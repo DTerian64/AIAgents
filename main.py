@@ -16,7 +16,7 @@ import time
 from uuid import uuid4 
 from azure.cosmos import CosmosClient, PartitionKey
 
-import Helpers.MyCosmosDBHelper as MyCosmosDBHelper
+from Helpers.MyCosmosDBHelper import CosmicWorksDb
 
 from Agent.David64OpenAI import David64OpenAI
 
@@ -24,9 +24,6 @@ TENANT_ID = os.getenv("TENANT_ID")
 CLIENT_ID = os.getenv("CLIENT_ID") 
 AUTHORITY = f"https://login.microsoftonline.com/{TENANT_ID}"
 JWKS_URL = f"{AUTHORITY}/discovery/v2.0/keys"
-
-
-ai_conversations_container = MyCosmosDBHelper.getAIConversationsContainer()
 
 _jwks_cache = None
 _jwks_last_fetch = 0
@@ -73,6 +70,11 @@ app = FastAPI()
 @app.on_event("startup")
 async def startup_event():
     app.state.aiagent = David64OpenAI()
+    app.state.cosmos_db = CosmicWorksDb(
+        endpoint=os.getenv("COSMOS_ENDPOINT"),
+        key=os.getenv("COSMOS_PRIMARY_KEY"),
+        database_name=os.getenv("COSMICWORKS_DATABASE_NAME")
+    )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -111,7 +113,8 @@ async def chat(request: Request,
     }
 
     # Save to Cosmos DB
-    ai_conversations_container.create_item(body=conversation)
+    cosmos_db = request.app.state.cosmos_db
+    cosmos_db.create_conversation_item(body=conversation) 
 
 
     return JSONResponse({"answer": answer})

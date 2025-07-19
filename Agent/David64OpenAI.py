@@ -45,8 +45,7 @@ class David64OpenAI:
         if knowledgeSource == "cosmic_lang": 
             """Call the Cosmic Works RAG chain with user input."""
             try:        
-                cosmic_lang = CosmicWorksLangChain.CosmicWorksLangChain(self.chat_model, self.embeddings)
-                cosmic_lang.create_local_faiss_index(file_path=r"C:\Users\David\source\repos\AIFoundry\Agents\App_data\sample_products.json")
+                cosmic_lang = CosmicWorksLangChain.CosmicWorksLangChain(self.chat_model, self.embeddings)               
                 return cosmic_lang.get_process_langchain(user_input)
                                              
             except Exception as e:

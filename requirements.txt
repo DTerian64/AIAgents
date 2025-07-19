@@ -13,3 +13,4 @@ python-jose[cryptography]
 azure-ai-inference
 azure-cosmos
 spacy
+azure-storage-blob
