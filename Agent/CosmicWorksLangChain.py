@@ -1,7 +1,17 @@
 from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
 from langchain_community.vectorstores import FAISS
-from langchain.chains import RetrievalQA
+
 from langchain.schema import Document
+from langchain.chains import RetrievalQA
+from langchain.prompts import PromptTemplate, MessagesPlaceholder
+from langchain.chains.qa_with_sources.map_reduce_prompt import QUESTION_PROMPT
+from langchain.chains.llm import LLMChain
+
+
+
+from langchain_core.messages import SystemMessage, HumanMessage
+from dotenv import load_dotenv
+from azure.storage.blob import BlobServiceClient
 from openai import AzureOpenAI
 import os
 import json
@@ -24,7 +34,7 @@ class CosmicWorksLangChain:
             azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),  # e.g. https://your-resource-name.openai.azure.com
             deployment=os.getenv("AZURE_EMBEDDING_DEPLOYMENT"),  # Your deployed embedding model name
             openai_api_version="2023-05-15",
-            chunk_size=1 
+            chunk_size=100 
         )
     
   
@@ -83,12 +93,13 @@ class CosmicWorksLangChain:
     
         for filename in ["index.faiss", "index.pkl"]:
             blob_name = f"{blob_dir}/{filename}"
+            print(f"Downloading {blob_name} to {local_path}...")
             blob_client = container_client.get_blob_client(blob_name)
             download_path = os.path.join(local_path, filename)
 
-        with open(download_path, "wb") as f:
-            download_stream = blob_client.download_blob()
-            f.write(download_stream.readall())
+            with open(download_path, "wb") as f:
+                download_stream = blob_client.download_blob()
+                f.write(download_stream.readall())
     
     def faiss_index_exists(self, local_path="faiss_cosmicworks"):
         """Check if the FAISS index exists locally."""
@@ -97,34 +108,81 @@ class CosmicWorksLangChain:
             os.path.exists(os.path.join(local_path, "index.pkl"))
     )
 
-    def get_langchain_retrievalqa_agent(self):
-        """Create a LangChain RetrievalQA agent using the FAISS index."""
-        print("Loading FAISS index and initializing QA chain...")
 
-        local_faiss_path = "faiss_cosmicworks"
+    def get_process_langchain(self, user_input: str) -> str:
+        """Answer a user_input using the RetrievalQA agent."""
 
-        if not self.faiss_index_exists(local_faiss_path):
-            self.download_faiss_index_from_blob(local_faiss_path)
-
-        vector_store = FAISS.load_local(local_faiss_path, self.embeddings, allow_dangerous_deserialization=True)                       
-        
-        qa_chain = RetrievalQA.from_chain_type(
-            llm=self.chat_model,
-            chain_type="stuff",
-            retriever=vector_store.as_retriever()
-        )
-        print("✅ RetrievalQA agent initialized successfully.")
-        return qa_chain
-
-    def get_process_langchain(self, query: str) -> str:
-        """Answer a query using the RetrievalQA agent."""
-        
         try:
-            qa_chain = self.get_langchain_retrievalqa_agent()
-        
-            response = qa_chain.invoke(query)
-            return response["result"]  
+            local_faiss_path = "faiss_cosmicworks"
+
+            if not self.faiss_index_exists(local_faiss_path):
+                self.download_faiss_index_from_blob(local_faiss_path)                      
+
+            # Load vector store
+            vector_store = FAISS.load_local(local_faiss_path, self.embeddings, allow_dangerous_deserialization=True)
+
+            total_docs = vector_store.index.ntotal if hasattr(vector_store.index, 'ntotal') else 0
+            print(f"Total documents in vector store: {total_docs}")  
+
+            # DYNAMIC K BASED ON QUERY TYPE
+            counting_keywords = ["how many", "count", "number of", "total", "all"]
+            is_counting_query = any(keyword in user_input.lower() for keyword in counting_keywords)
+            
+            if is_counting_query:
+                k = min(200, total_docs)  # Use much higher k for counting
+                print(f"🔢 Counting query detected - using k={k}")
+            else:
+                k = min(10, total_docs)
+                print(f"🔍 General query detected - using k={k}")
+            
+            # Updated prompt for better counting
+            if is_counting_query:
+                template = (
+                "You are a helpful assistant for Cosmic Works product analysis.\n"
+                "For counting questions, carefully count ALL items mentioned in the context.\n"
+                "Be thorough and systematic in your counting.\n"
+                "If the context seems incomplete, mention this limitation.\n\n"
+                "Context:\n{context}\n\n"
+                "Question: {question}\n\n"
+                "Count carefully and show your work:"
+                )
+            else:
+                template = (
+                    "You are a helpful assistant for product questions in Cosmic Works.\n"
+                    "Given the following context, answer the request.\n\n"
+                    "Context:\n{context}\n\n"
+                    "Question: {question}\n"
+                    )
+            
+            prompt = PromptTemplate(
+                input_variables=["context", "question"],
+                template=template
+            ) 
+
+            retriever=vector_store.as_retriever(search_kwargs={"k": k})        
+            
+            # Create the RetrievalQA with map_reduce chain
+            qa_chain = RetrievalQA.from_llm(
+                llm=self.chat_model,
+                retriever=retriever,
+                return_source_documents=True,
+                prompt=prompt
+            )
+
+            print("✅ RetrievalQA agent initialized successfully.")
+
+            response = qa_chain.invoke({"query": user_input})
+            answer = response["result"]
+            sources = response["source_documents"]
+
+
+            print(f"Answer: {answer}")
+            print(f"Based on {len(sources)} source documents")
+            for i, doc in enumerate(sources):
+                print(f"Source {i+1}: {doc.page_content[:100]}...")
+                        
+            return response["result"]
+
         except Exception as e:
             print(f"Error in get_process_langchain: {e}")
             return f"Error in get_process_langchain: {e}"
-        

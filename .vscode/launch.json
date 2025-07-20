@@ -8,6 +8,16 @@
       "program": "${workspaceFolder}/main.py",
       "console": "integratedTerminal",
       "envFile": "${workspaceFolder}/.env"
-    } 
+      "justMyCode": false
+    },
+     {
+      "name": "Python: UploadFAISSToAzureBlob",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/UploadFAISSToAzureBlob.py",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env"
+    }
+
   ]
 }
