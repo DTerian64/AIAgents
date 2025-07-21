@@ -1,7 +1,7 @@
 const msalConfig = {
   auth: {
     clientId: "177da031-26fa-448a-8521-1d9bedde86d3",
-    authority: "https://login.microsoftonline.com/4d5f34d3-d97b-40c7-8704-edff856d3654",
+    authority: "https://login.microsoftonline.com/rideshareadavid64.onmicrosoft.com",
     redirectUri: "https://david64aichat-bsecexfhgggmaghv.westus2-01.azurewebsites.net"
   },
   cache: {
@@ -40,12 +40,28 @@ msalInstance.initialize().then(() => {
 
 async function signIn() {
   try {
-    const loginResponse = await msalInstance.loginPopup({
-      scopes: ["openid", "profile", "email"]
-    });
+    
+    console.log("Starting sign in with config:", msalConfig);
+    
+    const loginRequest = {
+      scopes: ["openid", "profile", "email"],
+      // Add domain hint to help with routing
+      extraQueryParameters: {
+        domain_hint: "RideshareDavid64.onmicrosoft.com"
+      }
+    };
+    
+    console.log("Login request:", loginRequest);
+    
+    const loginResponse = await msalInstance.loginPopup(loginRequest);
+    
+    // Log successful response details
+    console.log("Login successful - Full response:", loginResponse);
+    console.log("Account details:", loginResponse.account);
     console.log("ID token:", loginResponse.idToken);
-    sessionStorage.setItem("id_token", loginResponse.idToken);
+    console.log("Scopes granted:", loginResponse.scopes);
 
+    sessionStorage.setItem("id_token", loginResponse.idToken);
     const account = loginResponse.account;
     console.log(account);
     document.getElementById("userWelcome").innerText = `Welcome, ${account.name}!`;
@@ -54,8 +70,14 @@ async function signIn() {
     document.getElementById("signOutButton").style.display = "inline-block";
     document.getElementById("submitButton").disabled = false;
   } catch (error) {
-    console.error("Sign in failed:", error);
-    alert("Sign in failed. Please try again.");
+    console.error("Detailed error info:");
+    console.error("Error name:", error.name);
+    console.error("Error message:", error.message);
+    console.error("Error code:", error.errorCode);
+    console.error("Error description:", error.errorDesc);
+    console.error("Correlation ID:", error.correlationId);
+    console.error("Full error object:", error);
+    alert("Sign in failed." + error.message);
   }
 }
 
