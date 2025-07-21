@@ -2,11 +2,20 @@ const msalConfig = {
   auth: {
     clientId: "177da031-26fa-448a-8521-1d9bedde86d3",
     authority: "https://login.microsoftonline.com/4d5f34d3-d97b-40c7-8704-edff856d3654",
-    redirectUri: window.location.origin
+    redirectUri: "https://david64aichat-bsecexfhgggmaghv.westus2-01.azurewebsites.net"
   },
   cache: {
     cacheLocation: "sessionStorage",
     storeAuthStateInCookie: false,
+  },
+  system: {
+    loggerOptions: {
+      loggerCallback: (level, message, containsPii) => {
+        console.log("MSAL:", message);
+      },
+      logLevel: msal.LogLevel.Verbose,
+      piiLoggingEnabled: false
+    }
   }
 };
 
