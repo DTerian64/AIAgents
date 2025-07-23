@@ -62,12 +62,11 @@ jobs:
           ls -la
           find . -name "*.py" -type f
 
-      - name: Login to Azure
-        uses: azure/login@v2
+      - name: 'Login via Azure CLI'
+        uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_E97600289EE24DD68C3EE49AFF609F7A }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F76EEA3129EB4BAEB2F521353729F09F }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F76EEA3129EB4BAEB2F521353729F09F }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
