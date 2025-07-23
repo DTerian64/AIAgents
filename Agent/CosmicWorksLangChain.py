@@ -51,8 +51,17 @@ class CosmicWorksLangChain:
             items = list(cosmos_db.get_container(container_name).read_all_items())
             documents = [
                 Document(
-                    page_content=f"{item['name']}. {item['description']} Price: ${item['price']}",
-                    metadata={"source": "cosmicworks"}
+                    page_content=(
+                        f"{item['name']}. {item['description']} "
+                        f"Category: {item.get('category', {}).get('name', 'Unknown')} → "
+                        f"SubCategory: {item.get('category', {}).get('subCategory', {}).get('name', 'Unknown')} "
+                        f"Price: ${item['price']}"
+                    ),
+                    metadata={
+                    "source": "cosmicworks",
+                    "category": item.get('category', {}).get('name'),
+                    "subCategory": item.get('category', {}).get('subCategory', {}).get('name')
+                    }
                 )
                 for item in items
             ]
@@ -133,7 +142,7 @@ class CosmicWorksLangChain:
             counting_keywords = ["how many", "count", "number of", "total", "all"]
             is_counting_query = any(keyword in user_input.lower() for keyword in counting_keywords)
             
-            k = 350 #min(200, total_docs)            
+            k = 300 #min(200, total_docs)            
             
             # Updated prompt for better counting
             if is_counting_query:
