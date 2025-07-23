@@ -129,10 +129,10 @@ class CosmicWorksLangChain:
             is_counting_query = any(keyword in user_input.lower() for keyword in counting_keywords)
             
             if is_counting_query:
-                k = min(200, total_docs)  # Use much higher k for counting
+                k = 420 #min(200, total_docs)  # Use much higher k for counting
                 print(f"🔢 Counting query detected - using k={k}")
             else:
-                k = min(10, total_docs)
+                k = 420 #min(10, total_docs)
                 print(f"🔍 General query detected - using k={k}")
             
             # Updated prompt for better counting
