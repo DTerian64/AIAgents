@@ -39,4 +39,4 @@ Write-Host "Environment variables from '$envFile' have been uploaded to the Azur
 Write-Host "You can verify the settings in the Azure Portal under 'Configuration' for the App Service."
 Write-Host "Note: Sensitive values are not displayed in the Azure Portal for security reasons."
 
-#.\upload-env.ps1 -envFile ".env" -resourceGroup "aifoundry-rg" -appName "David64AIChat" -isFunctionApp $false
+#.\upload-env.ps1 -envFile ".env" -resourceGroup "aifoundry-rg" -appName "david64AIagent" -isFunctionApp $false
