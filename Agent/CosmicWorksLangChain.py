@@ -56,8 +56,13 @@ class CosmicWorksLangChain:
                 )
                 for item in items
             ]
+
+            from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+            splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+            docs = splitter.split_documents(documents)
             
-            vector_store = FAISS.from_documents(documents, self.embeddings)
+            vector_store = FAISS.from_documents(docs, self.embeddings)
             vector_store.save_local("faiss_cosmicworks")
             print("FAISS index created and saved localy.")
         except Exception as e:
@@ -128,12 +133,7 @@ class CosmicWorksLangChain:
             counting_keywords = ["how many", "count", "number of", "total", "all"]
             is_counting_query = any(keyword in user_input.lower() for keyword in counting_keywords)
             
-            if is_counting_query:
-                k = 420 #min(200, total_docs)  # Use much higher k for counting
-                print(f"🔢 Counting query detected - using k={k}")
-            else:
-                k = 420 #min(10, total_docs)
-                print(f"🔍 General query detected - using k={k}")
+            k = 350 #min(200, total_docs)            
             
             # Updated prompt for better counting
             if is_counting_query:
@@ -162,24 +162,31 @@ class CosmicWorksLangChain:
             retriever=vector_store.as_retriever(search_kwargs={"k": k})        
             
             # Create the RetrievalQA with map_reduce chain
-            qa_chain = RetrievalQA.from_llm(
+            #qa_chain = RetrievalQA.from_llm(
+            #    llm=self.chat_model,
+            #    retriever=retriever,
+            #    return_source_documents=False,
+            #    prompt=prompt
+            #)
+            qa_chain = RetrievalQA.from_chain_type(
                 llm=self.chat_model,
                 retriever=retriever,
-                return_source_documents=True,
-                prompt=prompt
-            )
+                chain_type="stuff",  # or "refine"
+                return_source_documents=False,
+                chain_type_kwargs={"prompt": prompt}
+)
 
             print("✅ RetrievalQA agent initialized successfully.")
 
             response = qa_chain.invoke({"query": user_input})
-            answer = response["result"]
-            sources = response["source_documents"]
+            #answer = response["result"]
+            #sources = response["source_documents"]
 
 
-            print(f"Answer: {answer}")
-            print(f"Based on {len(sources)} source documents")
-            for i, doc in enumerate(sources):
-                print(f"Source {i+1}: {doc.page_content[:100]}...")
+            #print(f"Answer: {response["result"]}")
+            #print(f"Based on {len(sources)} source documents")
+            #for i, doc in enumerate(sources):
+            #    print(f"Source {i+1}: {doc.page_content[:100]}...")
                         
             return response["result"]
 
