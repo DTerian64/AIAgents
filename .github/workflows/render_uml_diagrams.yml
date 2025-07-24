@@ -34,5 +34,9 @@ jobs:
           git remote set-url origin https://x-access-token:${PAT_TOKEN}@github.com/DTerian64/AIAgents.git
 
       - name: Debug Git Remote
-        run: git remote -v
+        run: |
+          echo "Current Git Remote:" 
+          git remote -v
+          echo "Current Branch:"
+          git branch --show-current
           git push origin HEAD:main
