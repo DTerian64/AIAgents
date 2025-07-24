@@ -28,15 +28,5 @@ jobs:
           git config user.email "actions@github.com"
     
           git add docs/UML/img/
-          git commit -m "Auto-rendered UML diagrams" || echo "No changes to commit"
-    
-          # Force override the remote to use the PAT
-          git remote set-url origin https://x-access-token:${PAT_TOKEN}@github.com/DTerian64/AIAgents.git
-
-      - name: Debug Git Remote
-        run: |
-          echo "Current Git Remote:" 
-          git remote -v
-          echo "Current Branch:"
-          git branch --show-current
-          git push origin HEAD:main
+          git commit -m "Auto-rendered UML diagrams" || echo "No changes to commit"             
+          git push https://x-access-token:${PAT_TOKEN}@github.com/DTerian64/AIAgents.git HEAD:main
