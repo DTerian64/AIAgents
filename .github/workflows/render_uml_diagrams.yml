@@ -24,6 +24,6 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add docs/img/
+          git add docs/UML/img/
           git commit -m "Auto-rendered UML diagrams"
           git push
