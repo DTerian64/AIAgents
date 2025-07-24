@@ -33,4 +33,6 @@ jobs:
           # Force override the remote to use the PAT
           git remote set-url origin https://x-access-token:${PAT_TOKEN}@github.com/DTerian64/AIAgents.git
 
+      - name: Debug Git Remote
+        run: git remote -v
           git push origin HEAD:main
