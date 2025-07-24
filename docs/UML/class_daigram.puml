@@ -8,5 +8,13 @@ class CosmicWorksLangChain {
   +create_local_faiss_index()
   +download_faiss_index_from_blob()
 }
+class CosmicWorksDb{
+  +get_container()
+  +search_products()
+  +search_employees()
+  +create_conversation_item()
+}
 David64OpenAI --> CosmicWorksLangChain
+David64OpenAI --> CosmicWorksDb
+CosmicWorksLangChain --> CosmicWorksDb
 @enduml
