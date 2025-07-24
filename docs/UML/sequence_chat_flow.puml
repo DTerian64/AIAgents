@@ -1,0 +1,17 @@
+@startuml sequence_chat_flow.puml
+actor User
+participant "Browser" as B
+participant "FastAPI (/api/chat)" as A
+participant "David64OpenAI" as D
+participant "LangChain/Cosmic" as L
+participant "CosmosDB" as DB
+
+User -> B : Log in
+B -> A : POST /api/chat with token
+A -> A : verify_token()
+A -> D : get_agent_response()
+D -> L : get_process_langchain() or GPT
+L --> D : Answer
+D -> DB : create_conversation_item()
+A --> B : JSONResponse(answer)
+@enduml

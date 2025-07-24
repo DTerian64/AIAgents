@@ -1,0 +1,12 @@
+@startuml component_diagram.puml
+package "Frontend" {
+  [index.html] --> [app.js]
+}
+package "Backend" {
+  [main.py] --> [David64OpenAI]
+  [David64OpenAI] --> [CosmicWorksLangChain]
+  [David64OpenAI] --> [OpenAI GPT API]
+  [David64OpenAI] --> [CosmosDB]
+}
+[Frontend] --> [main.py] : HTTP Request
+@enduml

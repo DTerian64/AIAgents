@@ -1,0 +1,10 @@
+@startuml use_case.puml
+actor User
+User --> (Sign In via MSAL)
+User --> (Submit Question)
+(Sign In via MSAL) --> (MSAL Auth)
+(Submit Question) --> (FastAPI: /api/chat)
+(FastAPI: /api/chat) --> (David64OpenAI)
+(David64OpenAI) --> (LangChain or GPT)
+(David64OpenAI) --> (CosmosDB)
+@enduml

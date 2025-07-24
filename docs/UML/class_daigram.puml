@@ -1,0 +1,12 @@
+@startuml class_diagram.puml
+class David64OpenAI {
+  +get_agent_response()
+  +get_process_general_mml()
+}
+class CosmicWorksLangChain {
+  +get_process_langchain()
+  +create_local_faiss_index()
+  +download_faiss_index_from_blob()
+}
+David64OpenAI --> CosmicWorksLangChain
+@enduml

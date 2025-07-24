@@ -1,0 +1,25 @@
+name: Render UML Diagrams
+on:
+  push:
+    paths: ['docs/UML/**/*.puml']
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install PlantUML
+        run: sudo apt-get install plantuml
+      - name: Generate PNGs
+        run: |
+          mkdir -p docs/UML/img
+          for file in docs/UML/*.puml; do
+            plantuml "$file" -tpng -o ./img
+          done
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add docs/img/
+          git commit -m "Auto-rendered UML diagrams"
+          git push
