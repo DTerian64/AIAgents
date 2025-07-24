@@ -1,7 +1,11 @@
 name: Render UML Diagrams
 on:
   push:
-    paths: ['docs/UML/**/*.puml']
+    branches:
+      - main
+    paths:
+      - 'docs/UML/**/*.puml'
+      - '.github/workflows/render_uml_diagrams.yml'
 
 jobs:
   render:
